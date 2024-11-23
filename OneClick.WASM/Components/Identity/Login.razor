@@ -1,0 +1,149 @@
+﻿@page "/login"
+@using Microsoft.Extensions.Localization
+@using OneClick.WASM.Components.Layout.ImagesB64
+@using OneClick.WASM.Identity
+@using System.ComponentModel.DataAnnotations
+
+@inject IAccountManagement Acct
+
+@inject ILogger<Login> Logger
+@inject NavigationManager _navigationManager
+
+@inject IStringLocalizer<Login> localize
+
+@inject IAccountManagement _acct
+
+<PageTitle>Log in</PageTitle>
+
+
+
+<MudPaper Height="100vh" Class="d-flex flex-wrap justify-center align-content-center pa-4">
+    <MudPaper Outlined Class="pa-4" Width="100%" MaxWidth="500px">
+
+
+
+        @* <StatusMessage Message="@errorMessage" /> *@
+        <div class="d-flex flex-wrap justify-content-center my-4">
+            <MudImage Style="margin-left:auto; margin-right:auto" Width="90" Src="@SystemLogo.Content" />
+
+        </div>
+
+        <MudText Align="Align.Center" Typo="Typo.h3">@localize["Login"]</MudText>
+        <MudText Align="Align.Center" Typo="Typo.body1" Class="mb-8">@localize["NeedAuth"]</MudText>
+
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <DataAnnotationsValidator />
+
+
+
+
+            <MudTextField Label="Email" HelperText="Max. 8 characters" name="Input.Email"
+            Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AccountCircle" @bind-Value="Input.Email" For="@(() => Input.Email)" />
+            <MudTextField Label="Password" HelperText="Max. 8 characters" name="Input.Password" InputType="InputType.Password"
+            Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" @bind-Value="Input.Password" For="@(() => Input.Password)" />
+
+
+
+
+            <MudButton FullWidth Class="btn-cust w-100" Size="Size.Large" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">@localize["LoginButton"]</MudButton>
+
+
+            <div style="text-align:center" class=" my-3">
+                <p>
+                    <div>
+                        @localize["RegisterLable"]
+                        <MudLink Color="Color.Primary" Href="@(_navigationManager.GetUriWithQueryParameters("Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">@localize["RegisterLink"]</MudLink>
+                    </div>
+                    <div>
+                        @localize["ForgotLable"]
+                        <MudLink Color="Color.Primary" Href="Account/ForgotPasswordTelegram">@localize["ForgotLink"]</MudLink>
+                    </div>
+                </p>
+
+            </div>
+        </EditForm>
+    </MudPaper>
+
+</MudPaper>
+
+
+
+@code {
+    private string? errorMessage;
+
+
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+    bool success{ get; set; }
+    bool errors { get; set; }
+    private string[] errorList = [];
+
+
+    MudTextField<string> pwField1;
+    MudForm form;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // if (HttpMethods.IsGet(HttpContext.Request.Method))
+        // {
+        //     // Clear the existing external cookie to ensure a clean login process
+        //     await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        // }
+
+        if(await _acct.CheckAuthenticatedAsync()){
+            _navigationManager.NavigateTo("/");
+        }
+        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // if (authState.User.Identity.IsAuthenticated)
+        // {
+        //     RedirectManager.RedirectTo("/");
+        // }
+    }
+
+    public async Task LoginUser()
+    {
+
+        success = errors = false;
+        errorList = [];
+
+
+
+        var result = await Acct.LoginAsync(Input.Email, Input.Password);
+
+        if (result.Succeeded)
+        {
+            _navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            errors = true;
+            errorList = result.ErrorList;
+        }
+       
+    }
+
+
+
+    private sealed class InputModel
+    {
+        [Required]
+        [RegularExpression(@"^[a-zA-Z]{1}[a-zA-Z0-9]{4,50}$",
+         ErrorMessage = "Логин должен содержать не менее 5 символов, только латиницу и цифры")]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; } = true;
+
+
+    }
+}
+

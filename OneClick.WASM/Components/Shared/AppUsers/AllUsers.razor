@@ -1,0 +1,144 @@
+﻿@using Microsoft.Extensions.Localization
+@using OneClick.Domain.Domain.Customers
+@using OneClick.Shared.AppEnums.UserEnums
+@using OneClick.WASM.Components.Pages
+@using OneClick.WASM.UseCases
+
+@inject IStringLocalizer<Users> _localize
+@inject IUserWasmRepository _userRepository
+@inject IJSRuntime _JSRuntime;
+@inject NavigationManager _navigate
+
+
+<PageTitle>@_localize["Users"] | CopyTrader</PageTitle>
+
+@code {
+    [Parameter] public List<Customer>? Users { get; set; }
+
+    [Parameter]public bool IsLoading { get; set; } = true;
+    private string[] icons = { Icons.Material.Filled.ArrowDownward, Icons.Material.Filled.ArrowUpward };
+    private string sortedBy = "Registered";
+    private bool? NameSortDesc { get; set; }
+    private bool? ProjectCountSortDesc { get; set; }
+    private bool? TelegramSortDesc { get; set; }
+    private bool? RolesSortDesc { get; set; }
+    private bool? StatusSortDesc { get; set; }
+    private bool? BalanceSortDesc { get; set; }
+    private bool? RegisteredSortDesc { get; set; }
+
+    
+
+    async void SortEvent(UserSort sortBy)
+    {
+        
+        
+        StateHasChanged();
+        bool? sortedDesc = null;
+        // switch (title)
+        // {
+        //     case "Name":
+        //         sortedBy = "Name";
+        //         sortedDesc = NameSortDesc == null ? NameSortDesc = sortedDesc = false : sortedDesc = NameSortDesc = !NameSortDesc;
+        //         break;
+
+        //     case "Telegram":
+        //         sortedBy = "Telegram";
+        //         sortedDesc = TelegramSortDesc == null ? TelegramSortDesc = sortedDesc = false : sortedDesc = TelegramSortDesc = !TelegramSortDesc;
+        //         break;
+
+        //     case "Status":
+        //         sortedBy = "Status";
+        //         sortedDesc = StatusSortDesc == null ? StatusSortDesc = sortedDesc = false : sortedDesc = StatusSortDesc = !StatusSortDesc;
+        //         break;
+
+        //     case "Balance":
+        //         sortedBy = "Balance";
+        //         sortedDesc = BalanceSortDesc == null ? BalanceSortDesc = sortedDesc = false : sortedDesc = BalanceSortDesc = !BalanceSortDesc;
+        //         break;
+
+        //     case "Registered":
+        //         sortedBy = "Registered";
+        //         sortedDesc = RegisteredSortDesc == null ? RegisteredSortDesc = sortedDesc = false : sortedDesc = RegisteredSortDesc = !RegisteredSortDesc;
+        //         break;
+
+        //     default:
+        //         sortedBy = "Registered";
+        //         sortedDesc = false;
+        //         break;
+        // }
+
+        // SortBy(title, sortedDesc);
+    }
+
+
+    private async Task TelegramRequest(string telegram)
+    {
+        var url = "https://t.me/" + telegram;
+        await _JSRuntime.InvokeVoidAsync("open", url, "_blank");
+    }
+
+    private async void DepositByAdminDialog(Customer user)
+    {
+        // var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+        // var parameters = new DialogParameters<DepositByAdminDialog>();
+        // parameters.Add(x => x.ButtonText, "Пополнить");
+        // parameters.Add(x => x.ContentText, "Пополнение баланса пользователя " + user.Name);
+        // parameters.Add(x => x.ContentText2, "");
+
+
+        // var dialog = await DialogService.ShowAsync<DepositByAdminDialog>("Пополнение баланса", parameters, options);
+        // var result = await dialog.Result;
+        // if (!result.Cancelled)
+        // {
+        //     var deposit = (double)result.Data;
+        //     if (deposit <= 0)
+        //     {
+        //         return;
+        //     }
+        //     else
+        //     {
+        //         //var response = await Transaction.New(TransactionCode.Deposit, new Guid(user.Id),"", PaymentSystem.PaymentViaAdmin, deposit, "");
+        //         var response = await Transaction.Deposit(user.Id, "", PaymentSystem.PaymentViaAdmin, deposit, "");
+
+        //     }
+
+        // }
+        // StateHasChanged();
+    }
+
+    private void EditUser(string id)
+    {
+        _navigate.NavigateTo("users/" + id);
+    }
+
+    private async Task MessagerDialog(Customer user)
+    {
+        // var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        // var parameters = new DialogParameters<RemindDialog>();
+        // parameters.Add(x => x.ContentText, "Сообщение для пользователя " + user.Name);
+        // parameters.Add(x => x.ButtonText, "Отправить");
+        // parameters.Add(x => x.Color, Color.Info);
+        // parameters.Add(x => x.UserTelegramId, user.TelegramId);
+
+        // parameters.Add(x => x.Icon, Icons.Material.Filled.Mail);
+
+        // var dialog = await DialogService.ShowAsync<RemindDialog>("Мессенджер", parameters, options);
+        // var dialogResult = await dialog.Result;
+        // if (!dialogResult.Cancelled)
+        // {
+        //     var alert = (Models.Alert)dialogResult.Data;
+        //     var appUser = _context.Users.Where(x => x.Id == user.Id).FirstOrDefault();
+        //     if (appUser != null)
+        //     {
+        //         appUser.Alerts.Add(alert);
+        //         _context.Update(appUser);
+        //         _context.SaveChanges();
+
+        //         StateHasChanged();
+
+        //     }
+
+        // }
+    }
+}

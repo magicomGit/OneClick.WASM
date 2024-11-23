@@ -1,0 +1,201 @@
+﻿@using Microsoft.Extensions.Localization
+@using OneClick.Shared.AppEnums.UserEnums
+@using OneClick.WASM.Components.Dialog.Layout
+@using OneClick.WASM.Models.Customer
+@inherits LayoutComponentBase
+@inject IStringLocalizer<MainLayout> _localize
+@inject IDialogService _dialogService
+@inject NavigationManager _navigationManager
+
+<style>
+    .mud-main-content {
+        padding-top: 0 !important;
+    }
+</style>
+
+<MudThemeProvider Theme="@CustomTheme.MyTheme" IsDarkMode="_dark" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<AuthorizeView>
+    <Authorized>
+
+        <MudLayout>
+            <MudAppBar Fixed="true" Elevation="0" >
+
+                <div class="">
+                    <MudStack Row>
+                        <MudImage Width="40" Src="img/logo-200.png"></MudImage>
+                        <MudText Typo="Typo.h5" Class="ml-3 d-none d-md-block">CopyTrader</MudText>
+                    </MudStack>
+                </div>
+
+                <MudSpacer />
+
+
+                <div class="d-none d-md-block">
+                    <MudStack Spacing="1" Class="" Row AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Outlined.AccountBalanceWallet" Color="Color.Inherit" />
+                        <MudLink Href="/appuser?i=1" Underline="Underline.None">
+                            <MudText Typo="Typo.subtitle1" Style="color: white; font-weight:600">@_userData?.Balance.ToString("N2") $</MudText>
+                        </MudLink>
+
+                        @if (_userData?.FreezeDay != null)
+                        {
+                            <MudChip T="string" Class="fw-bold" Color="_freezeDayColor">@_localize["until"] @_userData?.FreezeDay?.ToString("d")</MudChip>
+                        }
+                    </MudStack>
+                </div>
+
+                <MudSpacer />
+
+
+                <div class="d-none d-md-block">
+                    <MudStack Spacing="1" Class="" Row AlignItems="AlignItems.Center">
+                        <MudLink Class="text-decoration-none fw-bold" Color="Color.Info" Href="@("appuser")">
+                            <MudAvatar>
+                                <MudImage Src="@_userData?.Avatar"></MudImage>
+                            </MudAvatar>
+                        </MudLink>
+                        <MudIconButton Icon="@_darkModeIcon" Color="Color.Inherit" Edge="Edge.End" OnClick="@((e)=>ThemeToggle())" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" OnClick="LanguageToggle" />
+                    </MudStack>
+                </div>
+
+
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-md-none" Color="Color.Inherit" Edge="Edge.End" OnClick="@((e) => MenuToggle())" />
+
+            </MudAppBar>
+
+
+            <MudPaper Square Elevation="1" Class="d-none d-md-block px-4 py-2" Style="@(_dark ? "background:#1a1c2d; margin-top:64px": "background:#fff;  margin-top:64px")">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="pa-1" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" />
+            </MudPaper>
+
+            @* mobile *@
+            <MudDrawer @bind-Open="@_open" OverlayAutoClose="true" Class="d-md-none" Height="100%" Color="Color.Tertiary" Variant="@DrawerVariant.Temporary" Anchor="Anchor.Top">
+                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="px-4">
+                    <MudImage Width="30" Height="30" Src="img/logo-200.png"></MudImage>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"  Edge="Edge.End" OnClick="@((e) => MenuToggle())" />
+                </MudStack>
+
+                <MudStack Justify="Justify.Center" Spacing="0" AlignItems="AlignItems.Center">
+                    <MudLink Class="text-decoration-none fw-bold" Color="Color.Info" Href="@("appuser")">
+                        <MudAvatar Size="Size.Large">
+                            <MudImage Src="@_userData?.Avatar"></MudImage>
+                        </MudAvatar>
+                    </MudLink>
+                    <MudText Class="mobile-text">@_userData?.UserName</MudText>
+                    
+                </MudStack>
+
+
+                <MudDivider Style="flex-grow: initial;" Class=" my-2" />
+
+
+
+                <MudStack Row AlignItems="AlignItems.Center">
+                    <MudNavLink Href="/appuser?i=1" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccountBalanceWallet" IconColor="Color.Surface">
+                        <MudStack Row>
+                            <MudText  Color="Color.Surface">@_userData?.Balance.ToString("N2") $</MudText>
+                            @if (_userData?.FreezeDay != null)
+                            {
+                                <MudText Style="color:gray; font-size:12px; padding:3px;">@_localize["until"] @_userData.FreezeDay?.ToString("d")</MudText>
+                            }
+
+                        </MudStack>
+                        
+                    </MudNavLink>                   
+                </MudStack>
+
+                <MudNavLink Match="NavLinkMatch.All" Icon="@_darkModeIcon" IconColor="Color.Surface" OnClick="@((e)=>ThemeToggle())">@_userData?.Theme.ToString()</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Language" OnClick="LanguageToggle" IconColor="Color.Surface">@_userData?.Language</MudNavLink>
+
+                <MudDivider Style="flex-grow: initial;" Class="my-2" />
+                <NavMenu NewTransactionCount="_newTransactionCount" />
+            </MudDrawer>
+
+            <MudDrawer @bind-Open="_drawerOpen" Class="left-menu" ClipMode="DrawerClipMode.Always" Color="Color.Dark" Elevation="1">
+                <NavMenu NewTransactionCount="_newTransactionCount" />
+            </MudDrawer>
+            <MudMainContent Class="content">
+                @Body
+            </MudMainContent>
+        </MudLayout>
+    </Authorized>
+    <NotAuthorized>
+        <MudLayout>
+
+
+            @Body
+
+        </MudLayout>
+    </NotAuthorized>
+</AuthorizeView>
+@code{
+    private UserData? _userData { get; set; } = new UserData();
+    private bool _open = false;
+    private bool _dark = false;
+    private string _darkModeIcon = Icons.Material.Outlined.DarkMode;
+    private bool _drawerOpen = true;
+    private Color _freezeDayColor { get; set; } = Color.Success;
+    private int _newTransactionCount { get; set; }
+
+
+
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    void MenuToggle()
+    {
+        //_drawerOpen = !_drawerOpen;
+        _open = !_open;
+    }
+
+
+    async void LanguageToggle()
+    {
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        var parameters = new DialogParameters<LanguageSelectDialog>();
+
+        //var usersForSendMessage = await FilterApply(false);
+
+        //parameters.Add(x => x.TelegramUsers, usersForSendMessage);
+
+        var dialog = await _dialogService.ShowAsync<LanguageSelectDialog>("Мессенджер", parameters, options);
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Canceled)
+        {
+            var data = (string)dialogResult.Data;
+            _userData.Language = data;
+            //_cache.Set("UserName" + _userData.UserName, _userData, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
+            _navigationManager.Refresh(true);
+        }
+    }
+
+    async void ThemeToggle()
+    {
+        //_drawerOpen = !_drawerOpen;
+        _dark = !_dark;
+
+        if (_dark)
+        {
+
+            _userData.Theme = UserTheme.Dark;
+            //await _userRepository.UpdateThemeAsync(_userData.UserId, _userData.Theme);
+            _darkModeIcon = Icons.Material.Filled.DarkMode;
+        }
+        else
+        {
+
+            _userData.Theme = UserTheme.Light;
+           // await _userRepository.UpdateThemeAsync(_userData.UserId, _userData.Theme);
+            _darkModeIcon = Icons.Material.Outlined.DarkMode;
+        }
+    }
+}
