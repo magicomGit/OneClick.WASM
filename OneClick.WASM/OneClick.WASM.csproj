@@ -22,12 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="OneClick.Domain">
-      <HintPath>..\..\OneClickMainApi\OneClick.Domain\bin\Debug\net8.0\OneClick.Domain.dll</HintPath>
-    </Reference>
-    <Reference Include="OneClick.Shared">
-      <HintPath>..\..\OneClickMainApi\OneClick.Shared\bin\Debug\net8.0\OneClick.Shared.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\OneClick.Domain\OneClick.Domain.csproj" />
+    <ProjectReference Include="..\OneClick.Shared\OneClick.Shared.csproj" />
   </ItemGroup>
 
 </Project>
